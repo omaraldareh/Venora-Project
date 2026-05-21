@@ -1,0 +1,46 @@
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const connectDB = require("./config/db");
+const AuthRouter = require("./routes/Auth.route");
+const UserRouter = require("./routes/User.route");
+
+
+require('dotenv').config();
+const nodemailer = require('nodemailer');
+const HallRouter = require("./routes/Hall.route");
+const BookingRouter = require("./routes/Booking.route");
+const FavoriteRouter = require("./routes/Favourite.route");
+const ReviewRouter = require("./routes/Review.route");
+const AdminRouter = require("./routes/Admin.route");
+const SearchRouter = require("./routes/Search.route");
+const ProviderRouter = require("./routes/Provider.route");
+
+const app = express();
+
+app.use(express.json());
+
+connectDB();
+
+app.use(cors());
+
+app.use(express.urlencoded({ extended: true }));
+
+app.use('/api/auth',AuthRouter);
+app.use('/api/user/',UserRouter);
+app.use('/api/hall',HallRouter);
+app.use('/api/booking',BookingRouter);
+app.use('/api/favorite',FavoriteRouter);
+app.use('/api/review',ReviewRouter);
+app.use('/api/Admin',AdminRouter);
+app.use('/api/Search',SearchRouter);
+app.use('/api/provider',ProviderRouter);
+
+app.use("/uploads", express.static("uploads"));
+
+
+const PORT = process.env.PORT || 8000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
