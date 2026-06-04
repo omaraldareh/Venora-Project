@@ -2,7 +2,7 @@ const express = require("express");
 const ProviderRouter = express.Router();
 
 
-const {ProviderBookings,ProviderHalls,ProviderReviews,ProviderStatistics} = require("../controllers/provider.controller"); 
+const {ProviderBookings,ProviderHalls,ProviderReviews,ProviderStatistics} = require("../controllers/Provider.controller"); 
 
 const authentication = require("../middleware/Authentication");
 const authorization = require("../middleware/Authorization");
