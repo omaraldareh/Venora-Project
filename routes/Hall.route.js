@@ -10,7 +10,7 @@ const {createHall,GetAllHalls,HallDetails,MyHalls,UpdateHall,DeleteHall,BrowseHa
 
 const HallRouter = express.Router();
 
-HallRouter.post('/createHall', authentication, authorization('provider', 'admin'),upload.array('images', 5),createHall);
+HallRouter.post('/createHall', authentication, authorization('provider', 'admin'),upload.array('images', 10),createHall);
 
 HallRouter.get('/getAllHalls', authentication, authorization('admin'), GetAllHalls);
 

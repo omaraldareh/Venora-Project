@@ -17,9 +17,10 @@ BookingRouter.get('/myBookings',authentication,authorization('user'),GetMyBookin
 
 BookingRouter.patch('/cancel/:bookingId',authentication,authorization('user','admin'),CancelBooking);
 
-BookingRouter.get('/:id',authentication,authorization('user', 'provider', 'admin'),GetBookingDetails);
-
 BookingRouter.get('/hall/:hallId',authentication,authorization('provider'),GetBookingsByHall);
 
 BookingRouter.get('/upcoming/:hallId',authentication,authorization('provider'),UpcomingBookings);
+
+BookingRouter.get('/:id',authentication,authorization('user', 'provider', 'admin'),GetBookingDetails);
+
 module.exports = BookingRouter

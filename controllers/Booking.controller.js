@@ -2,18 +2,28 @@ const Book = require('../models/Booking.model');
 const Hall = require('../models/Hall.model');
 const mongoose = require('mongoose');
 
+
 const createBooking = async (req, res) => {
 
     const { bookingDate, slot } = req.body;
 
     try {
 
+        // ONLY USERS
+        if (req.user.role !== "user") {
+            return res.status(403).json({
+                message: "Only users can create bookings"
+            });
+        }
+
+        // VALID HALL ID
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({
                 message: "Invalid hall ID"
             });
         }
 
+        // REQUIRED FIELDS
         if (
             !bookingDate ||
             !slot ||
@@ -25,6 +35,7 @@ const createBooking = async (req, res) => {
             });
         }
 
+        // TIME FORMAT
         const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
         if (
@@ -37,13 +48,11 @@ const createBooking = async (req, res) => {
         }
 
         const start = new Date(`1970-01-01T${slot.startTime}:00`);
-        const end = new Date(`1970-01-01T${slot.endTime}:00`);
+        let end = new Date(`1970-01-01T${slot.endTime}:00`);
 
-        if (end <= start) {
-            return res.status(400).json({
-                message: "End time must be after start time"
-            });
-        }
+       if (end <= start) {
+          end.setDate(end.getDate() + 1);
+}
 
         const normalizedDate = new Date(bookingDate);
         normalizedDate.setHours(0, 0, 0, 0);
@@ -95,9 +104,13 @@ const createBooking = async (req, res) => {
             });
         }
 
-        // Check Selected Slot Exists
         const selectedSlot = hall.availableSlots.find((s) => {
-            return (s.startTime === slot.startTime && s.endTime === slot.endTime);
+
+            return (
+                s.startTime === slot.startTime &&
+                s.endTime === slot.endTime
+            );
+
         });
 
         if (!selectedSlot) {
@@ -106,21 +119,35 @@ const createBooking = async (req, res) => {
             });
         }
 
-        const existingBooking = await Book.findOne({
+        // GET BOOKINGS
+        const existingBookings = await Book.find({
             hall: hall._id,
             bookingDate: normalizedDate,
-            "slot.startTime": slot.startTime,
-            "slot.endTime": slot.endTime,
             status: { $ne: "cancelled" }
         });
 
-        if (existingBooking) {
+        const isOverlapping = existingBookings.some((booking) => {
+
+            const existingStart = new Date(
+                `1970-01-01T${booking.slot.startTime}:00`
+            );
+
+            let existingEnd = new Date(
+                `1970-01-01T${booking.slot.endTime}:00`
+            );
+
+            if (existingEnd <= existingStart) {
+                existingEnd.setDate(existingEnd.getDate() + 1);
+            }
+
+            return start < existingEnd && end > existingStart;
+        });
+
+        if (isOverlapping) {
             return res.status(400).json({
-                message:
-                    "This slot is already booked for the selected date"
+                message: "This time slot overlaps with an existing booking"
             });
         }
-
         const newBooking = new Book({
             user: req.user.id,
             hall: hall._id,
@@ -135,7 +162,11 @@ const createBooking = async (req, res) => {
         await newBooking.save();
 
         await newBooking.populate("user", "name email");
-        await newBooking.populate("hall","name location images");
+
+        await newBooking.populate(
+            "hall",
+            "name location images"
+        );
 
         return res.status(201).json({
             message: "Booking created successfully",
@@ -144,19 +175,13 @@ const createBooking = async (req, res) => {
 
     } catch (error) {
 
-        if (error.code === 11000) {
-            return res.status(400).json({
-                message: "This slot is already booked"
-            });
-        }
-
         return res.status(500).json({
             message: "Server error",
             error: error.message
         });
+
     }
 };
-
 const GetMyBookings = async (req, res) => {
     try {
         const bookings = await Book.find({ user: req.user.id }).populate("hall", "name location images price");
@@ -301,67 +326,78 @@ const CancelBooking = async (req, res) => {
     }
 }
 
+
 const GetAvailableSlots = async (req, res) => {
-
-    const { hallId } = req.params;
-    const { date } = req.query;
-
-    try {
-
-        if (!date) {
-            return res.status(400).json({
-                message: "Date is required"
-            });
-        }
-
-        const hall = await Hall.findById(hallId);
-
-        if (!hall) {
-            return res.status(404).json({
-                message: "Hall not found"
-            });
-        }
-
-        const normalizedDate = new Date(date);
-        normalizedDate.setHours(0,0,0,0);
-
-        const bookings = await Book.find({
-            hall: hallId,
-            bookingDate: normalizedDate,
-            status: "confirmed"
-        });
-
-        const bookedSlots = bookings.map((booking) => ({
-            startTime: booking.slot.startTime,
-            endTime: booking.slot.endTime
-        }));
-
-        const availableSlots = hall.availableSlots.filter((slot) => {
-
-            const isBooked = bookedSlots.some((booked) =>
-                booked.startTime === slot.startTime &&
-                booked.endTime === slot.endTime
-            );
-
-            return !isBooked;
-        });
-
-        return res.status(200).json({
-            message: "Available slots fetched successfully",
-            data: availableSlots
-        });
-
-    } catch (error) {
-
-        return res.status(500).json({
-            message: "Server error",
-            error: error.message
-        });
-
+ 
+  const { hallId } = req.params;
+  const { date }   = req.query;
+ 
+  try {
+ 
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
     }
-
-}
-
+ 
+    const hall = await Hall.findById(hallId);
+    if (!hall) {
+      return res.status(404).json({ message: "Hall not found" });
+    }
+ 
+    // Normalize the requested date to midnight UTC
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+ 
+    // All non-cancelled bookings for this hall on this day
+    const bookings = await Book.find({
+      hall:        hallId,
+      bookingDate: normalizedDate,
+      status:      { $ne: "cancelled" },
+    });
+ 
+    // Helper: convert "HH:mm" to a comparable Date on epoch day
+    const toEpoch = (timeStr) => {
+      const d = new Date(`1970-01-01T${timeStr}:00`);
+      return d;
+    };
+ 
+    // Helper: does a candidate slot overlap any existing booking?
+    const isSlotBooked = (slot) => {
+      let slotStart = toEpoch(slot.startTime);
+      let slotEnd   = toEpoch(slot.endTime);
+      if (slotEnd <= slotStart) slotEnd.setDate(slotEnd.getDate() + 1);
+ 
+      return bookings.some((booking) => {
+        let bookedStart = toEpoch(booking.slot.startTime);
+        let bookedEnd   = toEpoch(booking.slot.endTime);
+        if (bookedEnd <= bookedStart) bookedEnd.setDate(bookedEnd.getDate() + 1);
+ 
+        // Overlap: slot starts before booking ends AND slot ends after booking starts
+        return slotStart < bookedEnd && slotEnd > bookedStart;
+      });
+    };
+ 
+    // Annotate every hall slot with its availability status
+    const annotatedSlots = hall.availableSlots.map((slot) => ({
+      startTime: slot.startTime,
+      endTime:   slot.endTime,
+      price:     slot.price,
+      status:    isSlotBooked(slot) ? "booked" : "available",
+    }));
+ 
+    return res.status(200).json({
+      message: "Slots fetched successfully",
+      data:    annotatedSlots,
+    });
+ 
+  } catch (error) {
+ 
+    return res.status(500).json({
+      message: "Server error",
+      error:   error.message,
+    });
+ 
+  }
+};
 const GetAllBookings = async (req, res) => {
 
     try {

@@ -135,7 +135,57 @@ const verifyRegisterOtp = async (req, res) => {
    }
 
 }
+const resendOtp = async (req, res) => {
 
+   const { email, type } = req.body;
+
+   try {
+
+      if (!email) {
+         return res.status(400).json({
+            message: "Email is required"
+         });
+      }
+
+      const redisKey =
+         type === "reset"
+            ? `resetOtp:${email}`
+            : `otp:${email}`;
+
+      const data = await redisClient.get(redisKey);
+
+      if (!data) {
+         return res.status(400).json({
+            message: "OTP expired or not found"
+         });
+      }
+
+      const parsedData = JSON.parse(data);
+
+      const newOtp = OTP();
+
+      await redisClient.set(
+         redisKey,
+         JSON.stringify({
+            otp: newOtp,
+            userData: parsedData.userData || null
+         }),
+         { EX: 300 }
+      );
+
+      await sendOtpMail(email, newOtp, type);
+
+      return res.status(200).json({
+         message: "OTP resent successfully"
+      });
+
+   } catch (error) {
+
+      return res.status(500).json({
+         message: error.message
+      });
+   }
+};
 const Login = async (req, res) => {
 
    const { email, password } = req.body;
@@ -354,6 +404,7 @@ const Logout = async (req, res) => {
 module.exports = {
    register,
    verifyRegisterOtp,
+   resendOtp,
    Login,
    forgetPassword,
    verifyResetOtp,

@@ -2,7 +2,7 @@ const User = require('../models/User.model');
 
 const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find().select("-password");
+        const users = await User.find({ role: "user" }).select("-password");
             return res.status(200).json(
             {
                 message: "Users fetched successfully",
@@ -14,6 +14,18 @@ const getAllUsers = async (req, res) => {
     }
 }
 
+const getAllProviders = async (req, res) => {
+    try {
+        const providers = await User.find({ role: "provider" }).select("-password");
+        
+        return res.status(200).json({
+            message: "Providers fetched successfully",
+            data: providers
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
 const getUserById = async(req, res) => {
     const {id} = req.params;
     
@@ -91,6 +103,7 @@ const UpdateUserProfile = async (req, res) => {
 }
 module.exports = {
     getAllUsers,
+    getAllProviders,
     getUserById,
     UpdateUserProfile
 }

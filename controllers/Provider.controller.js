@@ -85,11 +85,33 @@ const ProviderStatistics = async (req, res) => {
         const providerHalls = await Hall.find({ provider: req.user.id });
         const hallIds = providerHalls.map(hall => hall._id);
         
+        const localToday = new Date();       
+        
+        const utcToday = new Date(Date.UTC(
+            localToday.getFullYear(),
+            localToday.getMonth(),
+            localToday.getDate(),
+            0, 0, 0, 0
+        ));
+
         const hallsNumber = providerHalls.length;
 
         const bookingsNumber = await Book.countDocuments({ hall: { $in: hallIds } });
+        
         const reviewsNumber = await Review.countDocuments({ hall: { $in: hallIds } });
-        const confirmedBookingsNumber = await Book.countDocuments({ hall: { $in: hallIds }, status: "confirmed" });
+
+        const upcomingBookingsNumber = await Book.countDocuments({ 
+            hall: { $in: hallIds }, 
+            status: "confirmed",
+            bookingDate: { $gte: utcToday } 
+        });
+
+        
+        const completedBookingsNumber = await Book.countDocuments({ 
+            hall: { $in: hallIds }, 
+            status: "confirmed",
+            bookingDate: { $lt: utcToday } 
+        });
         
         const avgRatingResult = await Review.aggregate([
             { $match: { hall: { $in: hallIds } } },
@@ -98,13 +120,15 @@ const ProviderStatistics = async (req, res) => {
 
         const avgRating = avgRatingResult.length > 0 ? avgRatingResult[0].avgRating : 0;
 
+
         return res.status(200).json({
             message: "Statistics fetched successfully",
             data: {
                 hallsNumber,
                 bookingsNumber,
                 reviewsNumber,
-                confirmedBookingsNumber,
+                upcomingBookingsNumber,   
+                completedBookingsNumber,  
                 avgRating: Number(avgRating.toFixed(1)) 
             }
         });
@@ -115,6 +139,7 @@ const ProviderStatistics = async (req, res) => {
         });
     }
 }
+
 module.exports = {
      ProviderBookings,
      ProviderHalls,

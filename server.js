@@ -25,6 +25,7 @@ connectDB();
 app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
+   
 
 app.use('/api/auth',AuthRouter);
 app.use('/api/user/',UserRouter);

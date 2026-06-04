@@ -6,6 +6,13 @@ const createFavorite = async (req, res) => {
     const {hallId} = req.params;
 
     try {
+
+        if (req.user.role !== "user") {
+            return res.status(403).json({
+            message: "Only regular users can add venues to favorites"
+        }); 
+        }
+
         const hall = await Hall.findById(hallId);
 
         if (!hall) {

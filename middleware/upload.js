@@ -8,8 +8,7 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params: {
         folder: "venora-halls",
-        allowed_formats: ["jpg", "jpeg", "png"]
-    }
+        allowed_formats: ["jpg", "jpeg", "png", "webp"]    }
 });
 
 const upload = multer({

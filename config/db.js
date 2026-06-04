@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://127.0.0.1:27017/Venora");
+    await mongoose.connect(process.env.MONGO_URI);
 
-    console.log("Connected to MongoDB");
+    console.log("Connected to MongoDB Atlas");
   } catch (err) {
     console.log(err);
     process.exit(1);
