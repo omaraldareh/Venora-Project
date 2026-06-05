@@ -1,10 +1,11 @@
 const Brevo = require('@getbrevo/brevo');
 
+// التعديل الصحيح للاستدعاء في النسخ الجديدة:
+let defaultClient = Brevo.ApiClient.instance;
+let apiKey = defaultClient.authentications['apiKey'];
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
 const apiInstance = new Brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(
-    Brevo.TransactionalEmailsApiApiKeys.apiKey,
-    process.env.BREVO_API_KEY
-);
 
 const sendOtpMail = async (to, otp, type) => {
     let subject = '';
@@ -24,7 +25,6 @@ const sendOtpMail = async (to, otp, type) => {
     }
 
     const sendSmtpEmail = new Brevo.SendSmtpEmail();
-
     sendSmtpEmail.sender = {
         name: 'Venora Team',
         email: process.env.EMAIL
