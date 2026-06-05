@@ -43,5 +43,8 @@ app.use("/uploads", express.static("uploads"));
 const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
+  console.log("REDIS_URL =", process.env.REDIS_URL ? "FOUND" : "MISSING");
+  console.log("EMAIL =", process.env.EMAIL ? "FOUND" : "MISSING");
+  console.log("MONGO_URI =", process.env.MONGO_URI ? "FOUND" : "MISSING");
   console.log(`Server is running on port ${PORT}`);
 });
