@@ -4,15 +4,17 @@ require('dotenv').config();
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
-    secure: false, 
+    secure: false, // منفذ 587 يتطلب false
     pool: true,
     auth: {
         user: process.env.EMAIL,
-        pass: process.env.PASSWORD 
+        pass: process.env.PASSWORD // تأكد إنه الـ App Password
     },
+    socketTimeout: 30000,
+    greetingTimeout: 15000,
+    dnsTimeout: 10000,
     tls: {
-        rejectUnauthorized: false,
-        family: 4 
+        rejectUnauthorized: false
     }
 });
 

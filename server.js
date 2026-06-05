@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const AuthRouter = require("./routes/Auth.route");
 const UserRouter = require("./routes/User.route");
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 
 
 require('dotenv').config();
