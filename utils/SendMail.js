@@ -1,11 +1,9 @@
-const Brevo = require('@getbrevo/brevo');
+const SibApiV3Sdk = require('sib-api-v3-sdk');
 
-// التعديل الصحيح للاستدعاء في النسخ الجديدة:
-let defaultClient = Brevo.ApiClient.instance;
-let apiKey = defaultClient.authentications['apiKey'];
-apiKey.apiKey = process.env.BREVO_API_KEY;
+const defaultClient = SibApiV3Sdk.ApiClient.instance;
+defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 
-const apiInstance = new Brevo.TransactionalEmailsApi();
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
 const sendOtpMail = async (to, otp, type) => {
     let subject = '';
@@ -24,11 +22,9 @@ const sendOtpMail = async (to, otp, type) => {
         message = 'We received a request to reset your password.';
     }
 
-    const sendSmtpEmail = new Brevo.SendSmtpEmail();
-    sendSmtpEmail.sender = {
-        name: 'Venora Team',
-        email: process.env.EMAIL
-    };
+    const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+
+    sendSmtpEmail.sender = { name: 'Venora Team', email: process.env.EMAIL };
     sendSmtpEmail.to = [{ email: to }];
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = `
