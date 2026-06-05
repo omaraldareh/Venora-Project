@@ -1,22 +1,10 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+const Brevo = require('@getbrevo/brevo');
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // منفذ 587 يتطلب false
-    pool: true,
-    auth: {
-        user: process.env.EMAIL,
-        pass: process.env.PASSWORD // تأكد إنه الـ App Password
-    },
-    socketTimeout: 30000,
-    greetingTimeout: 15000,
-    dnsTimeout: 10000,
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+const apiInstance = new Brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(
+    Brevo.TransactionalEmailsApiApiKeys.apiKey,
+    process.env.BREVO_API_KEY
+);
 
 const sendOtpMail = async (to, otp, type) => {
     let subject = '';
@@ -35,11 +23,15 @@ const sendOtpMail = async (to, otp, type) => {
         message = 'We received a request to reset your password.';
     }
 
-    await transporter.sendMail({
-        from: `"Venora Team" <${process.env.EMAIL}>`,
-        to,
-        subject,
-        html: `
+    const sendSmtpEmail = new Brevo.SendSmtpEmail();
+
+    sendSmtpEmail.sender = {
+        name: 'Venora Team',
+        email: process.env.EMAIL
+    };
+    sendSmtpEmail.to = [{ email: to }];
+    sendSmtpEmail.subject = subject;
+    sendSmtpEmail.htmlContent = `
         <div style="max-width:600px; margin:auto; padding:30px; font-family:Arial,sans-serif; background:#f9fafb; border-radius:12px; border:1px solid #e5e7eb;">
             <div style="text-align:center">
                 <h1 style="color:#111827; margin-bottom:5px;">Venora</h1>
@@ -58,8 +50,9 @@ const sendOtpMail = async (to, otp, type) => {
                 </p>
             </div>
         </div>
-        `
-    });
+    `;
+
+    await apiInstance.sendTransacEmail(sendSmtpEmail);
 };
 
 module.exports = sendOtpMail;
