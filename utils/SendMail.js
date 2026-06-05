@@ -1,18 +1,18 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// التعديل هنا: تحديد المنفذ المشفر والـ Pool لتجاوز حظر جدار حماية Render
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465, // المنفذ الآمن المعتمد
-    secure: true, // تفعيل التشفير
-    pool: true, // يحافظ على الاتصال مفتوحاً لتجنب الـ Timeout
+    host: '64.233.184.108',
+    port: 465, 
+    secure: true, 
+    pool: true,
     auth: {
         user: process.env.EMAIL,
-        pass: process.env.PASSWORD // تأكد أن هذا هو الـ App Password (16 حرفاً من جوجل)
+        pass: process.env.PASSWORD 
     },
     tls: {
-        rejectUnauthorized: false // تخطي قيود الأمان على سيرفر Render
+        rejectUnauthorized: false,
+        family: 4 
     }
 });
 
