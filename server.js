@@ -28,9 +28,10 @@ app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
    
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok" });
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: "UP", message: "Server is alive and kicking!" });
 });
+
 app.use('/api/auth',AuthRouter);
 app.use('/api/user/',UserRouter);
 app.use('/api/hall',HallRouter);
