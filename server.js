@@ -28,7 +28,9 @@ app.use(cors());
 
 app.use(express.urlencoded({ extended: true }));
    
-
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
 app.use('/api/auth',AuthRouter);
 app.use('/api/user/',UserRouter);
 app.use('/api/hall',HallRouter);
@@ -38,6 +40,7 @@ app.use('/api/review',ReviewRouter);
 app.use('/api/Admin',AdminRouter);
 app.use('/api/Search',SearchRouter);
 app.use('/api/provider',ProviderRouter);
+
 
 app.use("/uploads", express.static("uploads"));
 
