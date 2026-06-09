@@ -184,7 +184,8 @@ const createBooking = async (req, res) => {
 };
 const GetMyBookings = async (req, res) => {
     try {
-        const bookings = await Book.find({ user: req.user.id }).populate("hall", "name location images price");
+        const bookings = await Book.find({ user: req.user.id })
+        .populate("hall", "name location images price");
 
         return res.status(200).json({
             message: "Bookings fetched successfully",
